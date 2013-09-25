@@ -7,7 +7,7 @@
 # All rights reserved - Do Not Redistribute
 #
 
-include_recipe "java"
+include_recipe "java7"
 
 
 tc7ver = node["tomcat7"]["version"]
