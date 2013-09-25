@@ -57,7 +57,7 @@ file "/etc/profile.d/jdk.sh" do
 end
 
 
-java_ark "jdk" do
+java7_ark "jdk" do
   url tarball_url
   checksum tarball_checksum
   app_home java_home
