@@ -1,43 +1,36 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!--
-  Copyright 2013 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
 
-  Licensed under the Apache License, Version 2.0 (the "License"). You may not
-  use this file except in compliance with the License. A copy of the License is
-  located at
+      http://www.apache.org/licenses/LICENSE-2.0
 
-      http://aws.amazon.com/apache2.0/
-
-  or in the "license" file accompanying this file. This file is distributed on
-  an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-  or implied. See the License for the specific language governing permissions
-  and limitations under the License.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 -->
-
 <!-- Note:  A "Server" is not itself a "Container", so you may not
      define subcomponents such as "Valves" at this level.
      Documentation at /docs/config/server.html
  -->
-<Server port="<%= node['tomcat7']['shutdown_port'] %>" shutdown="SHUTDOWN">
-<% if node['tomcat7']['base_version'].to_i > 6 -%>
+<Server port="8005" shutdown="SHUTDOWN">
   <!-- Security listener. Documentation at /docs/config/listeners.html
   <Listener className="org.apache.catalina.security.SecurityListener" />
   -->
-<% end -%>
   <!--APR library loader. Documentation at /docs/apr.html -->
   <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
   <!--Initialize Jasper prior to webapps are loaded. Documentation at /docs/jasper-howto.html -->
   <Listener className="org.apache.catalina.core.JasperListener" />
   <!-- Prevent memory leaks due to use of particular java/javax APIs-->
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
-<% if node['tomcat7']['base_version'].to_i < 7 -%>
-  <!-- JMX Support for the Tomcat server. Documentation at /docs/non-existent.html -->
-  <Listener className="org.apache.catalina.mbeans.ServerLifecycleListener" />
-<% end -%>
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
-<% if node['tomcat7']['base_version'].to_i > 6 -%>
   <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
-<% end -%>
 
   <!-- Global JNDI resources
        Documentation at /docs/jndi-resources-howto.html
@@ -72,35 +65,30 @@
          Java HTTP Connector: /docs/config/http.html (blocking & non-blocking)
          Java AJP  Connector: /docs/config/ajp.html
          APR (HTTP/AJP) Connector: /docs/apr.html
-         Define a non-SSL HTTP/1.1 Connector on port <%= node['tomcat7']['port'] %>
+         Define a non-SSL HTTP/1.1 Connector on port 8080
     -->
-    <Connector port="<%= node['tomcat7']['port'] %>" protocol="HTTP/1.1"
+    <Connector port="<%= node[:tomcat7][:port] %>" protocol="HTTP/1.1"
                connectionTimeout="20000"
-               URIEncoding="<%= node['tomcat7']['uri_encoding'] %>"
-               redirectPort="<%= node['tomcat7']['secure_port'] %>" />
+               redirectPort="<%= node[:tomcat7][:ssl_port] %>" />
     <!-- A "Connector" using the shared thread pool-->
     <!--
     <Connector executor="tomcatThreadPool"
-               port="<%= node['tomcat7']['port'] %>" protocol="HTTP/1.1"
+               port="8080" protocol="HTTP/1.1"
                connectionTimeout="20000"
-               URIEncoding="<%= node['tomcat7']['uri_encoding'] %>"
-               redirectPort="<%= node['tomcat7']['secure_port'] %>" />
+               redirectPort="8443" />
     -->
-    <!-- Define a SSL HTTP/1.1 Connector on port <%= node['tomcat7']['secure_port'] %>
+    <!-- Define a SSL HTTP/1.1 Connector on port 8443
          This connector uses the JSSE configuration, when using APR, the
          connector should be using the OpenSSL style configuration
          described in the APR documentation -->
     <!--
-    <Connector port="<%= node['tomcat7']['secure_port'] %>" protocol="HTTP/1.1" SSLEnabled="true"
+    <Connector port="<%= node[:tomcat7][:ssl_port] %>" protocol="HTTP/1.1" SSLEnabled="true"
                maxThreads="150" scheme="https" secure="true"
-               URIEncoding="<%= node['tomcat7']['uri_encoding'] %>"
                clientAuth="false" sslProtocol="TLS" />
     -->
 
-    <!-- Define an AJP 1.3 Connector on port <%= node['tomcat7']['ajp_port'] %> -->
-    <Connector port="<%= node['tomcat7']['ajp_port'] %>" protocol="AJP/1.3"
-               URIEncoding="<%= node['tomcat7']['uri_encoding'] %>"
-               redirectPort="<%= node['tomcat7']['secure_port'] %>" />
+    <!-- Define an AJP 1.3 Connector on port 8009 -->
+    <Connector port="<%= node[:tomcat7][:ajp_port] %>" protocol="AJP/1.3" redirectPort="8443" />
 
 
     <!-- An Engine represents the entry point (within Catalina) that processes
@@ -121,32 +109,19 @@
       <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/>
       -->
 
-<% if node['tomcat7']['base_version'].to_i < 7 -%>
-      <!-- The request dumper valve dumps useful debugging information about
-           the request and response data received and sent by Tomcat.
-           Documentation at: /docs/config/valve.html -->
-      <!--
-      <Valve className="org.apache.catalina.valves.RequestDumperValve"/>
-      -->
-
-<% end -%>
-<% if node['tomcat7']['base_version'].to_i > 6 -%>
       <!-- Use the LockOutRealm to prevent attempts to guess user passwords
            via a brute-force attack -->
       <Realm className="org.apache.catalina.realm.LockOutRealm">
-<% end -%>
         <!-- This Realm uses the UserDatabase configured in the global JNDI
              resources under the key "UserDatabase".  Any edits
              that are performed against this UserDatabase are immediately
              available for use by the Realm.  -->
         <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
                resourceName="UserDatabase"/>
-<% if node['tomcat7']['base_version'].to_i > 6 -%>
       </Realm>
-<% end -%>
 
       <Host name="localhost"  appBase="webapps"
-        unpackWARs="<%= node['tomcat7']['unpack_wars'] %>" autoDeploy="<%= node['tomcat7']['auto_deploy'] %>">
+            unpackWARs="true" autoDeploy="true">
 
         <!-- SingleSignOn valve, share authentication between web applications
              Documentation at: /docs/config/valve.html -->
@@ -159,8 +134,7 @@
              Note: The pattern used is equivalent to using pattern="common" -->
         <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
                prefix="localhost_access_log." suffix=".txt"
-               pattern="%h %l %u %t &quot;%r&quot; %s %b"
-               resolveHosts="false"/>
+               pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
       </Host>
     </Engine>
